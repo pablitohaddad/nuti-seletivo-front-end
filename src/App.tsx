@@ -8,7 +8,7 @@ function App() {
   const [data, setData] = useState<DadosContratos>({data:[], valorTotal:"", totalRegistros: 0});
   const [loading, setLoading] = useState(false);
   const formattedValueValorFinal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(data.valorTotal));
-  
+
   const notify = () => toast.info('Aguarde, a requisição está sendo feita', {
     position: "top-right",
     autoClose: 7000,
