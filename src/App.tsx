@@ -1,8 +1,8 @@
 import { useState } from "react";
 import api from "./services/api";
-import { Bounce, ToastContainer, toast } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { mask, unmask, unMask } from "remask";
+import { mask, unMask } from "remask";
 
 function App() {
   const [form, setForm] = useState({ cnpj: "", dataInicial: "", dataFinal: "", numeroPaginas: 0 });
