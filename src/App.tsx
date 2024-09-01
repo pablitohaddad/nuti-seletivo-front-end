@@ -5,11 +5,12 @@ import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   const [form, setForm] = useState({ cnpj: "", dataInicial: "", dataFinal: "", numeroPaginas: 0 });
-  const [data, setData] = useState<DadosContratos>({data:[], valorTotal:""});
+  const [data, setData] = useState<DadosContratos>({data:[], valorTotal:"", totalRegistros: 0});
   const [loading, setLoading] = useState(false);
-
+  const formattedValueValorFinal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(data.valorTotal));
+  
   const notify = () => toast.info('Aguarde, a requisição está sendo feita', {
-    position: "bottom-center",
+    position: "top-right",
     autoClose: 7000,
     hideProgressBar: false,
     closeOnClick: true,
@@ -32,6 +33,7 @@ function App() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
+
 
     try {
       const formattedDataInicial = formatDate(form.dataInicial);
@@ -57,6 +59,21 @@ function App() {
       setLoading(false);
     }
   }
+
+  function formatDateInResponse(dateString: string) {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+    const year = date.getFullYear();
+  
+    return `${day}/${month}/${year}`;
+  }
+
+  function formatCNPJ(cnpj: string) {
+    return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
+  }
+  
+  
 
   return (
     <div style={styles.container}>
@@ -109,17 +126,17 @@ function App() {
         </button>
         <ToastContainer />
       </form>
-
+  
       {data && data.data && data.data.length > 0 && (
         <div style={styles.results}>
-          <h2 style={styles.subtitle}>Informações do Órgão</h2>
+          <h2 style={{ ...styles.subtitle, textAlign: 'center' }}>Informações do Órgão</h2>
           <div style={styles.resultItem}>
             <h3 style={styles.resultTitle}>Razão Social:</h3>
             <p style={styles.resultText}>{data.data[0].orgaoEntidade.razaoSocial}</p>
           </div>
           <div style={styles.resultItem}>
             <h3 style={styles.resultTitle}>CNPJ:</h3>
-            <p style={styles.resultText}>{data.data[0].orgaoEntidade.cnpj}</p>
+            <p style={styles.resultText}>{formatCNPJ(data.data[0].orgaoEntidade.cnpj)}</p>
           </div>
           <div style={styles.resultItem}>
             <h3 style={styles.resultTitle}>Esfera ID:</h3>
@@ -129,38 +146,49 @@ function App() {
             <h3 style={styles.resultTitle}>Poder ID:</h3>
             <p style={styles.resultText}>{data.data[0].orgaoEntidade.poderId}</p>
           </div>
-
-          <h2 style={styles.subtitle}>Contratos</h2>
+  
+          <h2 style={{ ...styles.subtitle, textAlign: 'center' }}>Contratos</h2>
           {data.data.map((contrato, index) => (
             <div key={index} style={styles.contractItem}>
-              <div style={styles.contractDetail}>
-                <h4 style={styles.resultTitle}>Data de Vigência Inicial:</h4>
-                <p style={styles.resultText}>{contrato.dataVigenciaInicio}</p>
-              </div>
-              <div style={styles.contractDetail}>
-                <h4 style={styles.resultTitle}>Data de Vigência Final:</h4>
-                <p style={styles.resultText}>{contrato.dataVigenciaFim}</p>
-              </div>
-              <div style={styles.contractDetail}>
-                <h4 style={styles.resultTitle}>Razão Social do Fornecedor:</h4>
-                <p style={styles.resultText}>{contrato.orgaoEntidade.razaoSocial}</p>
-              </div>
               <div style={styles.contractDetail}>
                 <h4 style={styles.resultTitle}>Objeto do Contrato:</h4>
                 <p style={styles.resultText}>{contrato.objetoContrato}</p>
               </div>
               <div style={styles.contractDetail}>
+                <h4 style={styles.resultTitle}>Razão Social do Fornecedor:</h4>
+                <p style={styles.resultText}>{contrato.nomeRazaoSocialFornecedor}</p>
+              </div>
+              <div style={styles.contractDetail}>
+                <h4 style={styles.resultTitle}>Data de Vigência Inicial:</h4>
+                <p style={styles.resultText}>{formatDateInResponse(contrato.dataVigenciaInicio)}</p>
+              </div>
+              <div style={styles.contractDetail}>
+                <h4 style={styles.resultTitle}>Data de Vigência Final:</h4>
+                <p style={styles.resultText}>{formatDateInResponse(contrato.dataVigenciaFim)}</p>
+              </div>
+              <div style={styles.contractDetail}>
                 <h4 style={styles.resultTitle}>Valor Inicial do Contrato:</h4>
-                <p style={styles.resultText}>{contrato.valorInicial}</p>
+                <p style={styles.resultText}>
+                  {Number(contrato.valorInicial).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </p>
               </div>
             </div>
           ))}
-          <h3 style={styles.resultTitle}>Valor Total:</h3>
-          <p style={styles.resultText}>{data.valorTotal}</p>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ marginRight: '20px' }}>
+              <h3 style={styles.resultTitle}>Valor Total:</h3>
+              <p style={styles.resultText}>{formattedValueValorFinal}</p>
+            </div>
+            <div>
+              <h3 style={styles.resultTitle}>Total de Contratos:</h3>
+              <p style={styles.resultText}>{data.totalRegistros}</p>
+            </div>
+          </div>
         </div>
       )}
     </div>
   );
+  
 }
 
 const styles = {

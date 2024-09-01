@@ -2,7 +2,7 @@ type FormType = {
     cnpj:string
     dataInicial:string
     dataFinal:string
-    numeroPaginas:number
+    numeroPaginas:string
 }
 type OrgaoEntidade = {
     id: number;
@@ -18,9 +18,11 @@ type Contrato = {
     dataVigenciaFim: string;
     objetoContrato: string;
     valorInicial: string;
+    nomeRazaoSocialFornecedor: string 
 };
 
 type DadosContratos = {
     data: Contrato[];
     valorTotal: string;
+    totalRegistros: number
 };
