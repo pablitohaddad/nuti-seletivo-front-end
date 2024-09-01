@@ -2,6 +2,7 @@ import { useState } from "react";
 import api from "./services/api";
 import { Bounce, ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { mask, unmask, unMask } from "remask";
 
 function App() {
   const [form, setForm] = useState({ cnpj: "", dataInicial: "", dataFinal: "", numeroPaginas: 0 });
@@ -9,20 +10,13 @@ function App() {
   const [loading, setLoading] = useState(false);
   const formattedValueValorFinal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(data.valorTotal));
 
-  const notify = () => toast.info('Aguarde, a requisição está sendo feita', {
-    position: "top-right",
-    autoClose: 7000,
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-    progress: undefined,
-    theme: "light",
-    transition: Bounce,
-  });
-
   function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
     setForm({ ...form, [event.target.name]: event.target.value });
+  }
+
+  function formatCNPJ(cnpj:string){
+    const originalValue = unMask(cnpj)
+    return mask(originalValue, ["999.999/9999-99"])
   }
 
   function formatDate(date: string): string {
@@ -34,6 +28,7 @@ function App() {
     event.preventDefault();
     setLoading(true);
 
+    const id = toast.loading("Aguarde um momento...")
 
     try {
       const formattedDataInicial = formatDate(form.dataInicial);
@@ -42,7 +37,7 @@ function App() {
       const queryParams = new URLSearchParams({
         dataInicial: formattedDataInicial,
         dataFinal: formattedDataFinal,
-        pagina: form.numeroPaginas.toString(),
+        pagina: "1",
         cnpjOrgao: form.cnpj
       }).toString();
 
@@ -53,10 +48,16 @@ function App() {
 
       setData(data);
 
-    } catch (error) {
-      console.error("Erro ao buscar contratos:", error);
-    } finally {
-      setLoading(false);
+      toast.update(id, {render:"Dados encontrados com sucesso", type:"success", autoClose:3000, isLoading:false})
+
+    } catch (error: any) {
+      if(error.response.status === 500){
+        toast.update(id, {render:"A conexão com o banco de dados da PNCP falhou", type:"error", autoClose:3000, isLoading:false})
+      }else{
+        toast.update(id, {render:"Não foi possível encontrar os dados", type:"error", autoClose:3000, isLoading:false})
+      }
+    }finally{
+      setLoading(false)
     }
   }
 
@@ -68,205 +69,118 @@ function App() {
   
     return `${day}/${month}/${year}`;
   }
-
-  function formatCNPJ(cnpj: string) {
-    return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
-  }
-  
-  
-
   return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>Buscar contratos</h1>
-      <form onSubmit={handleSubmit} style={styles.form}>
-        <div style={styles.formGroup}>
-          <label style={styles.label}>CNPJ</label>
+    <div className="mx-auto p-5 bg-gray-100 rounded-lg shadow-lg">
+      <h1 className="text-center text-gray-800 text-xl font-bold">Buscar contratos</h1>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <div className="flex flex-col">
+          <label className="text-lg text-gray-600 mb-1">CNPJ</label>
           <input
             onChange={handleChange}
             value={form.cnpj}
             type="text"
             name="cnpj"
-            style={styles.input}
-            placeholder="Digite o CNPJ"
+            className="p-2 rounded border border-gray-300 text-lg"
+            placeholder="Digite o CNPJ (Apenas números)"
           />
         </div>
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Data Inicial</label>
+        <div className="flex flex-col">
+          <label className="text-lg text-gray-600 mb-1">Data Inicial</label>
           <input
             onChange={handleChange}
             value={form.dataInicial}
             type="date"
             name="dataInicial"
-            style={styles.input}
+            className="p-2 rounded border border-gray-300 text-lg"
           />
         </div>
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Data Final</label>
+        <div className="flex flex-col">
+          <label className="text-lg text-gray-600 mb-1">Data Final</label>
           <input
             onChange={handleChange}
             value={form.dataFinal}
             type="date"
             name="dataFinal"
-            style={styles.input}
+            className="p-2 rounded border border-gray-300 text-lg"
           />
         </div>
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Número de páginas</label>
-          <input
-            onChange={handleChange}
-            value={form.numeroPaginas}
-            type="number"
-            name="numeroPaginas"
-            style={styles.input}
-            placeholder="Digite o número de páginas"
-          />
-        </div>
-        <button onClick={notify} type="submit" style={styles.button} disabled={loading}>
-          {loading ? "Carregando..." : "Buscar"}
+        <button
+          type="submit"
+          className="p-2 bg-blue-500 text-white rounded cursor-pointer text-lg"
+          disabled={loading}
+        >
+          Buscar
         </button>
         <ToastContainer />
       </form>
   
       {data && data.data && data.data.length > 0 && (
-        <div style={styles.results}>
-          <h2 style={{ ...styles.subtitle, textAlign: 'center' }}>Informações do Órgão</h2>
-          <div style={styles.resultItem}>
-            <h3 style={styles.resultTitle}>Razão Social:</h3>
-            <p style={styles.resultText}>{data.data[0].orgaoEntidade.razaoSocial}</p>
+  <div className="w-full mt-5 p-4 bg-white rounded-lg shadow-md">
+    <h2 className="text-2xl text-center text-neutral mb-6 font-bold">Informações do Órgão</h2>
+    <div className="gap-4 flex">
+    <div className="items-baseline gap-4 flex mb-4">
+      <h3 className="text-lg text-primary mb-1">Razão Social:</h3>
+      <p className="text-base text-neutral">{data.data[0].orgaoEntidade.razaoSocial}</p>
+    </div>
+    <div className="items-baseline gap-4 flex mb-4">
+      <h3 className="text-lg text-primary mb-1">CNPJ:</h3>
+      <p className="text-base text-neutral">{formatCNPJ(data.data[0].orgaoEntidade.cnpj)}</p>
+    </div>
+    <div className="items-baseline gap-4 flex mb-4">
+      <h3 className="text-lg text-primary mb-1">Esfera ID:</h3>
+      <p className="text-base text-neutral">{data.data[0].orgaoEntidade.esferaId}</p>
+    </div>
+    <div className="items-baseline gap-4 flex mb-4">
+      <h3 className="text-lg text-primary mb-1">Poder ID:</h3>
+      <p className="text-base text-neutral">{data.data[0].orgaoEntidade.poderId}</p>
+    </div>
+    </div>
+
+    <h2 className="text-2xl text-center text-neutral mb-6 font-bold">Contratos</h2>
+    <div className="flex items-center mt-6">
+      <div className="items-baseline gap-4 flex mb-4 mr-5">
+        <h3 className="text-lg text-primary mb-1">Valor Total:</h3>
+        <p className="text-base text-neutral">{formattedValueValorFinal}</p>
+      </div>
+      <div className="items-baseline gap-4 flex mb-4">
+        <h3 className="text-lg text-primary mb-1">Total de Contratos:</h3>
+        <p className="text-base text-neutral">{data.totalRegistros}</p>
+      </div>
+    </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {data.data.map((contrato, index) => (
+        <div key={index} className="border border-black p-4 bg-gray-50 rounded-md shadow-sm">
+          <div className="mb-4">
+            <h4 className="text-lg text-primary mb-1">Objeto do Contrato:</h4>
+            <p className="text-base text-neutral">{contrato.objetoContrato}</p>
           </div>
-          <div style={styles.resultItem}>
-            <h3 style={styles.resultTitle}>CNPJ:</h3>
-            <p style={styles.resultText}>{formatCNPJ(data.data[0].orgaoEntidade.cnpj)}</p>
+          <div className="mb-4">
+            <h4 className="text-lg text-primary mb-1">Razão Social do Fornecedor:</h4>
+            <p className="text-base text-neutral">{contrato.nomeRazaoSocialFornecedor}</p>
           </div>
-          <div style={styles.resultItem}>
-            <h3 style={styles.resultTitle}>Esfera ID:</h3>
-            <p style={styles.resultText}>{data.data[0].orgaoEntidade.esferaId}</p>
+          <div className="mb-4">
+            <h4 className="text-lg text-primary mb-1">Data de Vigência Inicial:</h4>
+            <p className="text-base text-neutral">{formatDateInResponse(contrato.dataVigenciaInicio)}</p>
           </div>
-          <div style={styles.resultItem}>
-            <h3 style={styles.resultTitle}>Poder ID:</h3>
-            <p style={styles.resultText}>{data.data[0].orgaoEntidade.poderId}</p>
+          <div className="mb-4">
+            <h4 className="text-lg text-primary mb-1">Data de Vigência Final:</h4>
+            <p className="text-base text-neutral">{formatDateInResponse(contrato.dataVigenciaFim)}</p>
           </div>
-  
-          <h2 style={{ ...styles.subtitle, textAlign: 'center' }}>Contratos</h2>
-          {data.data.map((contrato, index) => (
-            <div key={index} style={styles.contractItem}>
-              <div style={styles.contractDetail}>
-                <h4 style={styles.resultTitle}>Objeto do Contrato:</h4>
-                <p style={styles.resultText}>{contrato.objetoContrato}</p>
-              </div>
-              <div style={styles.contractDetail}>
-                <h4 style={styles.resultTitle}>Razão Social do Fornecedor:</h4>
-                <p style={styles.resultText}>{contrato.nomeRazaoSocialFornecedor}</p>
-              </div>
-              <div style={styles.contractDetail}>
-                <h4 style={styles.resultTitle}>Data de Vigência Inicial:</h4>
-                <p style={styles.resultText}>{formatDateInResponse(contrato.dataVigenciaInicio)}</p>
-              </div>
-              <div style={styles.contractDetail}>
-                <h4 style={styles.resultTitle}>Data de Vigência Final:</h4>
-                <p style={styles.resultText}>{formatDateInResponse(contrato.dataVigenciaFim)}</p>
-              </div>
-              <div style={styles.contractDetail}>
-                <h4 style={styles.resultTitle}>Valor Inicial do Contrato:</h4>
-                <p style={styles.resultText}>
-                  {Number(contrato.valorInicial).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                </p>
-              </div>
-            </div>
-          ))}
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <div style={{ marginRight: '20px' }}>
-              <h3 style={styles.resultTitle}>Valor Total:</h3>
-              <p style={styles.resultText}>{formattedValueValorFinal}</p>
-            </div>
-            <div>
-              <h3 style={styles.resultTitle}>Total de Contratos:</h3>
-              <p style={styles.resultText}>{data.totalRegistros}</p>
-            </div>
+          <div className="mb-4">
+            <h4 className="text-lg text-primary mb-1">Valor Inicial do Contrato:</h4>
+            <p className="text-base text-neutral">
+              {Number(contrato.valorInicial).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            </p>
           </div>
         </div>
-      )}
+      ))}
+    </div>
+    
+  </div>
+)}
+
+
     </div>
   );
-  
 }
-
-const styles = {
-  container: {
-    maxWidth: "600px",
-    margin: "0 auto",
-    padding: "20px",
-    backgroundColor: "#f4f4f4",
-    borderRadius: "8px",
-    boxShadow: "0px 0px 15px rgba(0, 0, 0, 0.1)",
-  },
-  title: {
-    textAlign: "center" as const,
-    color: "#333",
-  },
-  form: {
-    display: "flex" as const,
-    flexDirection: "column" as const,
-    gap: "15px",
-  },
-  formGroup: {
-    display: "flex" as const,
-    flexDirection: "column" as const,
-  },
-  label: {
-    fontSize: "16px",
-    color: "#555",
-    marginBottom: "5px",
-  },
-  input: {
-    padding: "10px",
-    borderRadius: "4px",
-    border: "1px solid #ccc",
-    fontSize: "16px",
-  },
-  button: {
-    padding: "10px",
-    backgroundColor: "#007BFF",
-    color: "white",
-    border: "none",
-    borderRadius: "4px",
-    cursor: "pointer",
-    fontSize: "16px"
-  },
-  results: {
-    marginTop: "20px",
-    padding: "15px",
-    backgroundColor: "white",
-    borderRadius: "8px",
-    boxShadow: "0px 0px 10px rgba(0, 0, 0, 0.1)",
-  },
-  subtitle: {
-    fontSize: "20px",
-    color: "#333",
-    marginBottom: "15px",
-  },
-  resultItem: {
-    marginBottom: "10px",
-  },
-  contractItem: {
-    marginBottom: "15px",
-    padding: "10px",
-    backgroundColor: "#f9f9f9",
-    borderRadius: "5px",
-    boxShadow: "0px 0px 5px rgba(0, 0, 0, 0.1)",
-  },
-  contractDetail: {
-    marginBottom: "10px",
-  },
-  resultTitle: {
-    fontSize: "16px",
-    color: "#007BFF",
-    marginBottom: "5px",
-  },
-  resultText: {
-    fontSize: "16px",
-    color: "#333",
-  },
-};
-
 export default App;
