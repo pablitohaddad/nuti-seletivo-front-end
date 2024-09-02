@@ -1,50 +1,47 @@
-# React + TypeScript + Vite
+# Front-End para Consumo de API da PNCP
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Olá, bem-vindo(a) ao front-end da aplicação que consome os dados da PNCP. Desenvolvida em React com TypeScript e Vite, esta interface interage com a API para apresentar os dados de contratos realizados por órgãos públicos. Utilizei tecnologias como React, TypeScript, Vite, Axios, e ESLint para desenvolvimento, dentre outras.
 
-Currently, two official plugins are available:
+ACESSE O SITE!! [DocsPNCP](https://nuti-seletivo-front-end.vercel.app/)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+# Visão Geral
 
-## Expanding the ESLint configuration
+1. Esse projeto é o front-end da aplicação, o back-end está localizado no repositório: [REPO-BACK-END](https://github.com/pablitohaddad/nuti-seletivo-back-end)
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+2. Se você quer ver a documentação do back-end, ela está localizada nesse link: [DOC-BACK-END](https://nuti-seletivo-back-end-production.up.railway.app/swagger-ui/index.html)
 
-- Configure the top-level `parserOptions` property like this:
+3. Não é necessário rodar localmente tanto o back-end quanto o front-end, mas estarei disponibilizando tutoriais para fazer isso.
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+4. O motivo da criação deste front-end é cumprir o desafio técnico para estágio na NUTI.
+
+## Criador
+
+| E-mail              | Usuário GitHub |
+|---------------------|----------------|
+| pablohaddad73@gmail.com  | pablitohaddad    |
+
+## Configuração
+
+O front-end está em produção, mas se você quiser rodá-lo localmente, siga este tutorial:
+
+1. Clone o repositório:
+
+```
+git clone https://github.com/pablitohaddad/nuti-seletivo-front-end.git
+```
+2. Instale as dependências necessárias:
+
+```
+npm install
+```
+3. Execute a aplicação localmente:
+
+```
+npm run dev
+```
+4. Acesse a aplicação através do navegador em:
+
+```
+http://localhost:5173
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
-
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
